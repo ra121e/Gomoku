@@ -1,14 +1,31 @@
-FROM node:20-bookworm-slim
+FROM node:20-bookworm-slim AS base
 
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV BUN_INSTALL=/root/.bun
+ENV PATH=${BUN_INSTALL}/bin:${PATH}
 
-COPY package.json package-lock.json* ./
-RUN npm ci
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl unzip ca-certificates \
+    && curl -fsSL https://bun.com/install | bash \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY package.json bunfig.toml bun.lock ./
+RUN bun install --frozen-lockfile
+
+FROM base AS dev
 
 COPY . .
-RUN npm run build
 
 EXPOSE 3000
 
-CMD ["npm", "run", "start"]
+CMD ["bun", "run", "dev"]
+
+FROM base AS production
+
+COPY . .
+RUN bun run build
+
+EXPOSE 3000
+
+CMD ["bun", "run", "start"]
