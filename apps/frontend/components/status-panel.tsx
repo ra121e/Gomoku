@@ -5,29 +5,61 @@ import { io } from "socket.io-client";
 
 const HEALTH_REFRESH_MS = 10000;
 
-function toneForStatus(status) {
-  // Healthy states
+type Tone = "ok" | "warn" | "down";
+
+type PanelStatus =
+  | "checking"
+  | "connected"
+  | "connecting"
+  | "degraded"
+  | "disconnected"
+  | "error"
+  | "ok"
+  | "unreachable";
+
+type BackendHealth = {
+  status: PanelStatus;
+  database?: PanelStatus;
+  error?: string;
+};
+
+type FrontendHealth = {
+  status: PanelStatus;
+  backend?: BackendHealth;
+  checkedAt?: string;
+};
+
+type StatusPanelProps = {
+  socketUrl: string;
+};
+
+type WelcomePayload = {
+  message: string;
+};
+
+type HeartbeatPayload = {
+  timestamp: string;
+};
+
+function toneForStatus(status: PanelStatus): Tone {
   if (status === "ok" || status === "connected") {
     return "ok";
   }
 
-  // Degraded but not failed
-  if (
-    status === "degraded" ||
-    status === "connecting" ||
-    status === "checking"
-  ) {
+  if (status === "degraded" || status === "connecting" || status === "checking") {
     return "warn";
   }
 
-  // Explicit failure or unknown/unsupported states
-  // e.g., "disconnected", "error", "unreachable", etc.
   return "down";
 }
 
-export function StatusPanel({ socketUrl }) {
-  const [health, setHealth] = useState(null);
-  const [socketState, setSocketState] = useState("connecting");
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : "Unknown error";
+}
+
+export function StatusPanel({ socketUrl }: StatusPanelProps) {
+  const [health, setHealth] = useState<FrontendHealth | null>(null);
+  const [socketState, setSocketState] = useState<PanelStatus>("connecting");
   const [lastSignal, setLastSignal] = useState("Awaiting socket activity");
 
   useEffect(() => {
@@ -36,7 +68,7 @@ export function StatusPanel({ socketUrl }) {
     async function loadHealth() {
       try {
         const response = await fetch("/api/health", { cache: "no-store" });
-        const payload = await response.json();
+        const payload = (await response.json()) as FrontendHealth;
 
         if (active) {
           setHealth(payload);
@@ -47,15 +79,17 @@ export function StatusPanel({ socketUrl }) {
             status: "degraded",
             backend: {
               status: "unreachable",
-              error: error.message,
+              error: getErrorMessage(error),
             },
           });
         }
       }
     }
 
-    loadHealth();
-    const timer = setInterval(loadHealth, HEALTH_REFRESH_MS);
+    void loadHealth();
+    const timer = setInterval(() => {
+      void loadHealth();
+    }, HEALTH_REFRESH_MS);
 
     return () => {
       active = false;
@@ -80,11 +114,11 @@ export function StatusPanel({ socketUrl }) {
       setSocketState("error");
     });
 
-    socket.on("welcome", (payload) => {
+    socket.on("welcome", (payload: WelcomePayload) => {
       setLastSignal(payload.message);
     });
 
-    socket.on("heartbeat", (payload) => {
+    socket.on("heartbeat", (payload: HeartbeatPayload) => {
       setLastSignal(`Heartbeat at ${payload.timestamp}`);
     });
 
@@ -93,9 +127,9 @@ export function StatusPanel({ socketUrl }) {
     };
   }, [socketUrl]);
 
-  const frontendStatus = health?.status || "checking";
-  const backendStatus = health?.backend?.status || "checking";
-  const databaseStatus = health?.backend?.database || "checking";
+  const frontendStatus = health?.status ?? "checking";
+  const backendStatus = health?.backend?.status ?? "checking";
+  const databaseStatus = health?.backend?.database ?? "checking";
 
   return (
     <section className="panel">
@@ -126,7 +160,7 @@ export function StatusPanel({ socketUrl }) {
       <div className="meta">
         <div>Socket target: {socketUrl}</div>
         <div>Last signal: {lastSignal}</div>
-        <div>Health checked: {health?.checkedAt || "Waiting for first response"}</div>
+        <div>Health checked: {health?.checkedAt ?? "Waiting for first response"}</div>
       </div>
     </section>
   );

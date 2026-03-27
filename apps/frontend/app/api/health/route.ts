@@ -1,13 +1,17 @@
 export const dynamic = "force-dynamic";
 
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : "Unknown error";
+}
+
 export async function GET() {
-  const backendUrl = process.env.BACKEND_INTERNAL_URL || "http://backend:3001";
+  const backendUrl = process.env.BACKEND_INTERNAL_URL ?? "http://backend:3001";
 
   try {
     const response = await fetch(`${backendUrl}/api/health`, {
       cache: "no-store",
     });
-    const backend = await response.json();
+    const backend = (await response.json()) as unknown;
 
     return Response.json(
       {
@@ -25,7 +29,7 @@ export async function GET() {
         status: "degraded",
         backend: {
           status: "unreachable",
-          error: error.message,
+          error: getErrorMessage(error),
         },
         checkedAt: new Date().toISOString(),
       },

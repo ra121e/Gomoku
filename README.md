@@ -5,6 +5,59 @@
 
 # Instructions
 
+## Local setup
+
+This repo now uses Bun as the only supported package manager.
+
+### Prerequisites
+
+- Docker and Docker Compose
+- Bun 1.x for local app commands
+
+After installing Bun, restart your shell so both `bun` and `bunx` are available on your `PATH`.
+Run `bun install` once at the repo root if you want VS Code to use a single workspace TypeScript SDK for the whole repository.
+
+### Install dependencies
+
+```bash
+(cd apps/frontend && bun install)
+(cd apps/backend && bun install)
+```
+
+The backend install intentionally skips dependency lifecycle scripts. Generate the Prisma client with the Bun command below after installing backend dependencies.
+
+### Run locally without containers
+
+```bash
+(cd apps/backend && bun run dev)
+(cd apps/frontend && bun run dev)
+```
+
+### Prisma workflow
+
+```bash
+(cd apps/backend && bun run prisma:generate)
+(cd apps/backend && bun run prisma:push)
+```
+
+### Run the full stack with containers
+
+```bash
+docker compose up --build
+```
+
+This runs the app in a production-style container mode.
+
+### Run the full stack in Docker dev mode
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+```
+
+This override switches the frontend and backend to development mode, mounts the source tree into the containers, and enables hot reload while keeping PostgreSQL in Docker.
+
+Do not regenerate lockfiles with npm. Commit the Bun lockfiles instead.
+
 # Resources
 
 # Team Information
@@ -26,6 +79,12 @@
 # Project Management
 
 # Technical Stack
+
+- Full-stack framework: Next.js
+- Database ORM: Prisma
+- Database: PostgreSQL
+- Realtime transport: Socket.IO
+- Package manager: Bun
 
 # Database Schema
 
@@ -55,12 +114,6 @@
 1. The project's backend was designed as microservices, allowing for scalability and maintainability
 
 # Individual Contributions
-
-
-
-
-
-
 
 
 

@@ -1,6 +1,6 @@
 #!/bin/sh
 set -eu
 
-node scripts/wait-for-db.js
-npm run prisma:push -- --skip-generate
-npm run start
+bun scripts/wait-for-db.ts
+bun run prisma:push -- --skip-generate
+exec bun run start

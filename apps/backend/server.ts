@@ -1,6 +1,6 @@
-const http = require("node:http");
-const next = require("next");
-const { Server } = require("socket.io");
+import { createServer } from "node:http";
+import next from "next";
+import { Server } from "socket.io";
 
 const dev = process.env.NODE_ENV !== "production";
 const hostname = "0.0.0.0";
@@ -8,7 +8,7 @@ const port = Number(process.env.PORT || 3001);
 const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
 
-function readCorsOrigins() {
+function readCorsOrigins(): string[] {
   const configuredOrigins = process.env.SOCKET_CORS_ORIGIN;
 
   if (!configuredOrigins) {
@@ -18,11 +18,11 @@ function readCorsOrigins() {
   return configuredOrigins.split(",").map((origin) => origin.trim());
 }
 
-async function bootstrap() {
+async function bootstrap(): Promise<void> {
   await app.prepare();
 
-  const server = http.createServer((request, response) => {
-    handle(request, response);
+  const server = createServer((request, response) => {
+    void handle(request, response);
   });
 
   const io = new Server(server, {
@@ -49,7 +49,7 @@ async function bootstrap() {
   });
 }
 
-bootstrap().catch((error) => {
+bootstrap().catch((error: unknown) => {
   console.error("Failed to start backend:", error);
   process.exit(1);
 });

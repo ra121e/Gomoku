@@ -2,6 +2,10 @@ import { prisma } from "../../../lib/prisma";
 
 export const dynamic = "force-dynamic";
 
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : "Unknown error";
+}
+
 export async function GET() {
   try {
     await prisma.$queryRaw`SELECT 1`;
@@ -18,7 +22,7 @@ export async function GET() {
         service: "backend",
         status: "degraded",
         database: "unreachable",
-        error: error.message,
+        error: getErrorMessage(error),
         checkedAt: new Date().toISOString(),
       },
       { status: 503 },

@@ -1,0 +1,8 @@
+{
+  "name": "transcendence-tooling",
+  "private": true,
+  "packageManager": "bun@1.3.11",
+  "devDependencies": {
+    "typescript": "5.8.3"
+  }
+}
