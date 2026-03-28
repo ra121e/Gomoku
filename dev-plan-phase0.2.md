@@ -449,27 +449,68 @@ apps/backend/
 
 ## 実装順序
 
+この Phase では、レイヤーごとの大きな実装ではなく、**1 コマンド = 1 つの見える成果** を確認する極小の縦スライスで進める。
+
+各スライスは、できるだけ以下の 4 点だけを持つ。
+
+- フロントの操作が 1 つある
+- REST または WebSocket の責務が 1 つある
+- DB の変更が 1 つか最小限である
+- 画面で「動いた」が確認できる
+
 ```text
-Step 1: Prisma スキーマを Room / RoomPlayer / Move に更新
-          ↓
-Step 2: ルーム作成・参加・状態取得の REST API を実装
-          └─ ③ フェッチ → レンダリング を確認
-          ↓
-Step 3: moveValidator と stateBuilder を実装
-          └─ サーバー権威の中心ロジックを切り出す
-          ↓
-Step 4: POST /moves を実装
-          └─ REST は accepted / rejected だけ返す
-          ↓
-Step 5: Socket.IO で room:subscribe と game:update を実装
-          └─ ④ サーバープッシュ を確認
-          ↓
-Step 6: フロントで MiniBoard / TurnBanner / useSocketGame を実装
-          └─ 本人も相手も game:update で盤面更新
-          ↓
-Step 7: 2 タブで動作確認
-          └─ ② REST コマンド送信 + ④ WebSocket 状態同期 を確認
+Slice 0: create_room の最小疎通
+  - Schema: Room(id, status, createdAt) だけ
+  - Front: Create room ボタンだけ
+  - API: POST /api/rooms
+  - Confirm: roomId が画面に表示される
+
+Slice 1: list_rooms を追加
+  - API: GET /api/rooms
+  - Front: 作成済み room 一覧を表示
+  - Confirm: 直前に作った room が一覧に見える
+
+Slice 2: join_room を追加
+  - Schema: RoomPlayer を追加
+  - API: POST /api/rooms/:id/join
+  - Front: Join ボタンを追加
+  - Confirm: 2 人の displayName / seat が画面に見える
+
+Slice 3: subscribe_room を追加
+  - WS: room:subscribe / room:subscribed
+  - Front: 購読状態を表示
+  - Confirm: subscribed が画面に出る
+
+Slice 4: submit_move の最小版
+  - Schema: Move を追加
+  - API: POST /api/rooms/:id/moves
+  - Rule: 最初は保存できることの確認を優先する
+  - Confirm: 保存後に game:update が両画面へ届く
+
+Slice 5: not_your_turn を追加
+  - Rule: 手番チェックだけ入れる
+  - Confirm: 間違った人が打つと REST エラーになる
+
+Slice 6: occupied を追加
+  - Rule: 占有チェックを入れる
+  - Confirm: 既に埋まった場所に置けない
+
+Slice 7: stateBuilder を追加
+  - Logic: Move から board を組み立てる
+  - WS: game:update に board を載せる
+  - Confirm: 最後の一手だけでなく盤面全体が描画される
+
+Slice 8: GET /state を追加
+  - API: GET /api/rooms/:id/state
+  - Front: 再読込時の初期同期を実装
+  - Confirm: リロード後に同じ盤面へ戻る
+
+Slice 9: stateVersion / baseVersion を追加
+  - Rule: stale_state を扱えるようにする
+  - Confirm: 古い状態からの着手を拒否できる
 ```
+
+`moveValidator` は最初から全部作らない。まずは「保存できる」「配信できる」を通し、その後にルールを 1 つずつ追加する。
 
 ---
 
