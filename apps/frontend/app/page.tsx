@@ -1,4 +1,4 @@
-import { ClickToggleButton } from "../components/click-toggle-button";
+import { ClickButtons } from "../components/click-buttons";
 import { StatusPanel } from "../components/status-panel";
 
 export const dynamic = "force-dynamic";
@@ -22,7 +22,7 @@ export default function Home() {
           <p className="meta">
             Click the button to flip local React state and update the UI.
           </p>
-          <ClickToggleButton />
+          <ClickButtons />
         </article>
       </section>
       <StatusPanel socketUrl={socketUrl} />
