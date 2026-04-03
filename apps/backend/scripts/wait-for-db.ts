@@ -1,3 +1,5 @@
+import "../lib/load-env";
+
 import { createConnection } from "node:net";
 
 const databaseUrl = process.env.DATABASE_URL;

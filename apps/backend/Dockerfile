@@ -1,9 +1,10 @@
-FROM node:20-bookworm-slim AS base
+FROM node:24-bookworm-slim AS base
 
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV BUN_INSTALL=/root/.bun
 ENV PATH=${BUN_INSTALL}/bin:${PATH}
+ENV DATABASE_URL=postgresql://transcendence:change_me_please@database:5432/transcendence?schema=public
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl unzip ca-certificates openssl \
@@ -16,17 +17,15 @@ RUN bun install --frozen-lockfile
 FROM base AS dev
 
 COPY . .
-RUN bun run prisma:generate
 RUN chmod +x scripts/start.sh
 
 EXPOSE 3001
 
-CMD ["sh", "-c", "bun install --frozen-lockfile && bun scripts/wait-for-db.ts && bun run prisma:push -- --skip-generate && bun run dev"]
+CMD ["sh", "-c", "bun install --frozen-lockfile && bun run prisma:generate && bun scripts/wait-for-db.ts && bun run prisma:migrate:deploy && bun run dev"]
 
 FROM base AS production
 
 COPY . .
-RUN bun run prisma:generate
 RUN bun run build
 RUN chmod +x scripts/start.sh
 

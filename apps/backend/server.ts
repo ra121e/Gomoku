@@ -1,3 +1,5 @@
+import "./lib/load-env";
+
 import { createServer } from "node:http";
 import next from "next";
 import { Server } from "socket.io";
@@ -5,7 +7,15 @@ import { Server } from "socket.io";
 const dev = process.env.NODE_ENV !== "production";
 const hostname = "0.0.0.0";
 const port = Number(process.env.PORT || 3001);
-const app = next({ dev, hostname, port });
+
+// The custom server runs under Bun in dev, but Next's dev webpack path is more
+// reliable here than Turbopack for Prisma + pg externals inside the backend app.
+const app = next({
+  dev,
+  hostname,
+  port,
+  webpack: dev,
+});
 const handle = app.getRequestHandler();
 
 function readCorsOrigins(): string[] {
