@@ -8,9 +8,15 @@ const rootEnvPath = resolve(currentDirectory, "../../.env");
 
 config({ path: rootEnvPath, override: false });
 
+const databaseUrl =
+  process.env["DATABASE_URL"] ??
+  (process.env["CI"]
+    ? "postgresql://placeholder:placeholder@localhost:5432/placeholder?schema=public"
+    : undefined);
+
 export default defineConfig({
   schema: "./prisma/schema.prisma",
   datasource: {
-    url: env("DATABASE_URL"),
+    url: databaseUrl ?? env("DATABASE_URL"),
   },
 });
