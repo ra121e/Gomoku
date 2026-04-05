@@ -13,6 +13,7 @@
     "prisma:migrate:deploy": "bunx --bun prisma migrate deploy"
   },
   "dependencies": {
+    "@paralleldrive/cuid2": "3.3.0",
     "@prisma/adapter-pg": "7.6.0",
     "@prisma/client": "7.6.0",
     "dotenv": "17.4.0",
