@@ -66,42 +66,42 @@ enum Seat {
 // Models
 
 model User {
-  id        String     @id @default(dbgenerated("cuid2()"))
-  kind      UserKind   @default(HUMAN)
-  username  String     @unique
-  displayName String
-  email     String?    @unique
+  id              String    @id @default(dbgenerated("cuid2()"))
+  kind            UserKind  @default(HUMAN)
+  username        String    @unique
+  displayName     String
+  email           String?   @unique
   emailVerifiedAt DateTime?
-  passwordHash String?
-  avatarUrl String?
-  bio       String?
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  lastSeenAt DateTime?
+  passwordHash    String?
+  avatarUrl       String?
+  bio             String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  lastSeenAt      DateTime?
 
-  oauthAccounts OAuthAccount[]
-  sessions      UserSession[]
-  conversations ConversationParticipant[]
-  messages      ChatMessage[]
+  oauthAccounts    OAuthAccount[]
+  sessions         UserSession[]
+  conversations    ConversationParticipant[]
+  messages         ChatMessage[]
   roomParticipants RoomParticipant[]
-  createdRooms  Room[]          @relation("roomCreator")
-  gameStats     UserGameStats[]
+  createdRooms     Room[]                    @relation("roomCreator")
+  gameStats        UserGameStats[]
 
   // friendship relations (multiple relations to the same model must be named)
-  friendshipsLow  Friendship[] @relation("friendLow")
-  friendshipsHigh Friendship[] @relation("friendHigh")
+  friendshipsLow     Friendship[] @relation("friendLow")
+  friendshipsHigh    Friendship[] @relation("friendHigh")
   friendshipRequests Friendship[] @relation("friendRequestedBy")
 }
 
 model OAuthAccount {
-  id                 String         @id @default(dbgenerated("cuid2()"))
-  userId             String
-  provider           OAuthProvider
-  providerAccountId  String
-  accessToken        String?
-  refreshToken       String?
-  expiresAt          DateTime?
-  createdAt          DateTime       @default(now())
+  id                String        @id @default(dbgenerated("cuid2()"))
+  userId            String
+  provider          OAuthProvider
+  providerAccountId String
+  accessToken       String?
+  refreshToken      String?
+  expiresAt         DateTime?
+  createdAt         DateTime      @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -117,20 +117,21 @@ model UserSession {
   createdAt    DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId])
 }
 
 model Friendship {
-  id            Int      @id @default(autoincrement())
+  id            Int              @id @default(autoincrement())
   userLowId     String
   userHighId    String
   requestedById String
   status        FriendshipStatus @default(PENDING)
-  createdAt     DateTime @default(now())
+  createdAt     DateTime         @default(now())
   respondedAt   DateTime?
 
-  userLow  User @relation("friendLow", fields: [userLowId], references: [id], onDelete: Cascade)
-  userHigh User @relation("friendHigh", fields: [userHighId], references: [id], onDelete: Cascade)
+  userLow     User @relation("friendLow", fields: [userLowId], references: [id], onDelete: Cascade)
+  userHigh    User @relation("friendHigh", fields: [userHighId], references: [id], onDelete: Cascade)
   requestedBy User @relation("friendRequestedBy", fields: [requestedById], references: [id], onDelete: Cascade)
 
   @@unique([userLowId, userHighId])
@@ -138,14 +139,14 @@ model Friendship {
 }
 
 model Conversation {
-  id           String           @id @default(dbgenerated("cuid2()"))
-  kind         ConversationKind @default(DIRECT)
-  directKey    String?          @unique
-  roomId       String?          @unique
-  createdAt    DateTime         @default(now())
+  id            String           @id @default(dbgenerated("cuid2()"))
+  kind          ConversationKind @default(DIRECT)
+  directKey     String?          @unique
+  roomId        String?          @unique
+  createdAt     DateTime         @default(now())
   lastMessageAt DateTime?
 
-  room         Room?            @relation(fields: [roomId], references: [id])
+  room         Room?                     @relation(fields: [roomId], references: [id])
   participants ConversationParticipant[]
   messages     ChatMessage[]
 
@@ -153,10 +154,10 @@ model Conversation {
 }
 
 model ConversationParticipant {
-  id             String   @id @default(dbgenerated("cuid2()"))
+  id             String    @id @default(dbgenerated("cuid2()"))
   conversationId String
   userId         String
-  joinedAt       DateTime @default(now())
+  joinedAt       DateTime  @default(now())
   lastReadAt     DateTime?
 
   conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
@@ -185,42 +186,42 @@ model ChatMessage {
 }
 
 model Room {
-  id                 String       @id @default(dbgenerated("cuid2()"))
-  status             RoomStatus   @default(WAITING)
-  visibility         RoomVisibility @default(PUBLIC)
-  ruleType           RuleType     @default(GOMOKU)
-  boardSize          Int          @default(15)
-  stateVersion       Int          @default(0)
-  nextTurnSeat       Seat?
-  winningSeat        Seat?
-  endReason          String?
-  createdByUserId    String?
-  startedAt          DateTime?
-  finishedAt         DateTime?
-  createdAt          DateTime     @default(now())
-  updatedAt          DateTime     @updatedAt
+  id              String         @id @default(dbgenerated("cuid2()"))
+  status          RoomStatus     @default(WAITING)
+  visibility      RoomVisibility @default(PUBLIC)
+  ruleType        RuleType       @default(GOMOKU)
+  boardSize       Int            @default(15)
+  stateVersion    Int            @default(0)
+  nextTurnSeat    Seat?
+  winningSeat     Seat?
+  endReason       String?
+  createdByUserId String?
+  startedAt       DateTime?
+  finishedAt      DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
 
-  createdBy User? @relation("roomCreator", fields: [createdByUserId], references: [id])
+  createdBy    User?             @relation("roomCreator", fields: [createdByUserId], references: [id])
   participants RoomParticipant[]
-  moves         Move[]
-  conversation  Conversation?
+  moves        Move[]
+  conversation Conversation?
 
   @@index([status])
   @@index([createdByUserId])
 }
 
 model RoomParticipant {
-  id                  String   @id @default(dbgenerated("cuid2()")) // playerId in Phase 0.2 API
+  id                  String    @id @default(dbgenerated("cuid2()")) // playerId in Phase 0.2 API
   roomId              String
   userId              String?
   displayNameSnapshot String
-  role                Role     @default(PLAYER)
+  role                Role      @default(PLAYER)
   seat                Seat?
-  joinedAt            DateTime @default(now())
+  joinedAt            DateTime  @default(now())
   leftAt              DateTime?
 
-  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  user User? @relation(fields: [userId], references: [id])
+  room  Room   @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user  User?  @relation(fields: [userId], references: [id])
   moves Move[]
 
   @@unique([roomId, seat])
@@ -241,7 +242,7 @@ model Move {
   stateVersion  Int
   createdAt     DateTime @default(now())
 
-  room        Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  room        Room            @relation(fields: [roomId], references: [id], onDelete: Cascade)
   participant RoomParticipant @relation(fields: [participantId], references: [id], onDelete: Cascade)
 
   @@unique([roomId, moveNumber])
@@ -252,21 +253,21 @@ model Move {
 }
 
 model UserGameStats {
-  id              Int      @id @default(autoincrement())
-  userId          String
-  ruleType        RuleType
-  boardSize       Int
-  matchesPlayed   Int      @default(0)
-  wins            Int      @default(0)
-  losses          Int      @default(0)
-  draws           Int      @default(0)
-  botMatchesPlayed Int     @default(0)
-  botWins         Int      @default(0)
-  currentStreak   Int      @default(0)
-  bestStreak      Int      @default(0)
-  rating          Int?
-  lastPlayedAt    DateTime?
-  updatedAt       DateTime @updatedAt
+  id               Int       @id @default(autoincrement())
+  userId           String
+  ruleType         RuleType
+  boardSize        Int
+  matchesPlayed    Int       @default(0)
+  wins             Int       @default(0)
+  losses           Int       @default(0)
+  draws            Int       @default(0)
+  botMatchesPlayed Int       @default(0)
+  botWins          Int       @default(0)
+  currentStreak    Int       @default(0)
+  bestStreak       Int       @default(0)
+  rating           Int?
+  lastPlayedAt     DateTime?
+  updatedAt        DateTime  @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
