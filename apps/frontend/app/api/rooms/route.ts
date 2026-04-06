@@ -9,22 +9,37 @@ export async function POST(request: Request) {
     process.env["BACKEND_INTERNAL_URL"] ?? "http://backend:3001";
 
   try {
-    const init: RequestInit & { duplex?: "half" } = {
+    const response = await fetch(`${backendUrl}/api/rooms`, {
       method: "POST",
       headers: request.headers,
       body: request.body,
       cache: "no-store",
-      duplex: "half",
-    };
+    });
 
-    const response = await fetch(`${backendUrl}/api/rooms`, init);
+    const contentType = response.headers.get("content-type");
 
-    return new Response(response.body, {
+    if (response.status === 204 || response.status === 205) {
+      return new Response(null, { status: response.status });
+    }
+
+    const rawBody = await response.text();
+
+    if (contentType?.includes("application/json")) {
+      try {
+        const data = rawBody ? JSON.parse(rawBody) : null;
+        return Response.json(data, { status: response.status });
+      } catch {
+        // fall back to returning the raw body below
+      }
+    }
+
+    return new Response(rawBody, {
       status: response.status,
-      headers: response.headers,
+      headers: contentType ? { "content-type": contentType } : undefined,
     });
   } catch (error) {
     const message = getErrorMessage(error);
+
     return Response.json(
       {
         error: "failed_to_create_room",
