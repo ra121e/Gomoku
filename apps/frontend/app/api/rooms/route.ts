@@ -16,8 +16,27 @@ export async function POST(request: Request) {
       cache: "no-store",
     });
 
-    const data = await response.json();
-    return Response.json(data, { status: response.status });
+    const contentType = response.headers.get("content-type");
+
+    if (response.status === 204 || response.status === 205) {
+      return new Response(null, { status: response.status });
+    }
+
+    const rawBody = await response.text();
+
+    if (contentType?.includes("application/json")) {
+      try {
+        const data = rawBody ? JSON.parse(rawBody) : null;
+        return Response.json(data, { status: response.status });
+      } catch {
+        // fall back to returning the raw body below
+      }
+    }
+
+    return new Response(rawBody, {
+      status: response.status,
+      headers: contentType ? { "content-type": contentType } : undefined,
+    });
   } catch (error) {
     const message = getErrorMessage(error);
 
