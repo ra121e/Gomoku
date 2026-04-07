@@ -1,6 +1,3 @@
-import { prisma } from "@/lib/prisma";
-import { RoomStatus } from "../../../../backend/prisma";
-
 export const dynamic = "force-dynamic";
 
 function getErrorMessage(error: unknown): string {
@@ -54,28 +51,4 @@ export async function POST(request: Request) {
       },
     );
   }
-}
-
-export async function GET() {
-  const rooms = await prisma.room.findMany({
-    where: { status: RoomStatus.WAITING },
-    orderBy: { createdAt: "desc" },
-    include: {
-      participants: true,
-    },
-  });
-
-  const body = rooms.map((r) => ({
-    roomId: r.id,
-    status: r.status,
-    ruleType: r.ruleType,
-    boardSize: r.boardSize,
-    createdAt: r.createdAt,
-    players: r.participants.map((p) => ({
-      displayName: p.displayNameSnapshot,
-      seat: p.seat,
-    })),
-  }));
-
-  return Response.json(body);
 }

@@ -38,7 +38,7 @@ export async function GET() {
   });
 
   const body = rooms.map((r) => ({
-    roomId: r.id,
+    id: r.id,
     status: r.status,
     ruleType: r.ruleType,
     boardSize: r.boardSize,
