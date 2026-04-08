@@ -19,37 +19,37 @@ export default function ProtoPage() {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [listError, setListError] = useState<string | null>(null);
 
-  async function loadRooms() {
-    try {
-      const response = await fetch("/api/rooms", {
-        cache: "no-store",
-      });
-
-      if (!response.ok) {
-        const errorPayload = (await response
-          .json()
-          .catch(() => null)) as ErrorResponse | null;
-        const message =
-          errorPayload?.message ??
-          errorPayload?.detail ??
-          errorPayload?.error ??
-          `Request failed with status ${response.status}`;
-
-        setListError(message);
-        setRooms([]);
-        return;
-      }
-
-      const data = (await response.json()) as Room[];
-      setRooms(data);
-      setListError(null);
-    } catch {
-      setListError("Network error while loading rooms");
-      setRooms([]);
-    }
-  }
-
   useEffect(() => {
+    async function loadRooms() {
+      try {
+        const response = await fetch("/api/rooms", {
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          const errorPayload = (await response
+            .json()
+            .catch(() => null)) as ErrorResponse | null;
+          const message =
+            errorPayload?.message ??
+            errorPayload?.detail ??
+            errorPayload?.error ??
+            `Request failed with status ${response.status}`;
+
+          setListError(message);
+          setRooms([]);
+          return;
+        }
+
+        const data = (await response.json()) as Room[];
+        setRooms(data);
+        setListError(null);
+      } catch {
+        setListError("Network error while loading rooms");
+        setRooms([]);
+      }
+    }
+
     void loadRooms();
   }, []);
 
