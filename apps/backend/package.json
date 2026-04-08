@@ -25,9 +25,6 @@
     "react-dom": "19.0.0",
     "socket.io": "4.8.1"
   },
-  "prisma": {
-    "seed": "bun --bun prisma/seed.ts"
-  },
   "devDependencies": {
     "@types/node": "24.6.0",
     "@types/pg": "8.20.0",

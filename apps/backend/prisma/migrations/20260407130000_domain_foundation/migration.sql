@@ -111,7 +111,7 @@ CREATE TABLE "UserProfile" (
 
 -- CreateTable
 CREATE TABLE "AvatarMedia" (
-    "id" TEXT NOT NULL DEFAULT cuid2(),
+    "id" TEXT NOT NULL,
     "uploadedById" TEXT,
     "url" TEXT NOT NULL,
     "provider" TEXT,
@@ -128,7 +128,7 @@ CREATE TABLE "AvatarMedia" (
 
 -- CreateTable
 CREATE TABLE "DirectMessage" (
-    "id" TEXT NOT NULL DEFAULT cuid2(),
+    "id" TEXT NOT NULL,
     "conversationId" TEXT NOT NULL,
     "senderUserId" TEXT,
     "kind" "MessageKind" NOT NULL DEFAULT 'USER',
@@ -142,7 +142,7 @@ CREATE TABLE "DirectMessage" (
 
 -- CreateTable
 CREATE TABLE "Match" (
-    "id" TEXT NOT NULL DEFAULT cuid2(),
+    "id" TEXT NOT NULL,
     "status" "MatchStatus" NOT NULL DEFAULT 'WAITING',
     "visibility" "MatchVisibility" NOT NULL DEFAULT 'PUBLIC',
     "ruleType" "RuleType" NOT NULL DEFAULT 'GOMOKU',
@@ -162,7 +162,7 @@ CREATE TABLE "Match" (
 
 -- CreateTable
 CREATE TABLE "MatchParticipant" (
-    "id" TEXT NOT NULL DEFAULT cuid2(),
+    "id" TEXT NOT NULL,
     "matchId" TEXT NOT NULL,
     "userId" TEXT,
     "displayNameSnapshot" TEXT NOT NULL,
@@ -177,7 +177,7 @@ CREATE TABLE "MatchParticipant" (
 
 -- CreateTable
 CREATE TABLE "MatchMove" (
-    "id" TEXT NOT NULL DEFAULT cuid2(),
+    "id" TEXT NOT NULL,
     "matchId" TEXT NOT NULL,
     "participantId" TEXT NOT NULL,
     "moveNumber" INTEGER NOT NULL,
@@ -218,7 +218,7 @@ CREATE TABLE "UserAchievement" (
 
 -- CreateTable
 CREATE TABLE "AnalyticsEvent" (
-    "id" TEXT NOT NULL DEFAULT cuid2(),
+    "id" TEXT NOT NULL,
     "userId" TEXT,
     "sessionId" TEXT,
     "matchId" TEXT,

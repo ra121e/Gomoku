@@ -81,7 +81,7 @@ enum MatchResult {
 // Models
 
 model User {
-  id              String    @id @default(dbgenerated("cuid2()"))
+  id              String    @id @default(cuid(2))
   kind            UserKind  @default(HUMAN)
   username        String    @unique
   displayName     String
@@ -132,7 +132,7 @@ model UserProfile {
 }
 
 model AvatarMedia {
-  id           String   @id @default(dbgenerated("cuid2()"))
+  id           String   @id @default(cuid(2))
   uploadedById String?
   url          String
   provider     String?
@@ -151,7 +151,7 @@ model AvatarMedia {
 }
 
 model OAuthAccount {
-  id                String        @id @default(dbgenerated("cuid2()"))
+  id                String        @id @default(cuid(2))
   userId            String
   provider          OAuthProvider
   providerAccountId String
@@ -168,7 +168,7 @@ model OAuthAccount {
 }
 
 model UserSession {
-  id           String    @id @default(dbgenerated("cuid2()"))
+  id           String    @id @default(cuid(2))
   userId       String
   sessionToken String    @unique
   expiresAt    DateTime
@@ -203,7 +203,7 @@ model Friendship {
 }
 
 model Conversation {
-  id            String           @id @default(dbgenerated("cuid2()"))
+  id            String           @id @default(cuid(2))
   kind          ConversationKind @default(DIRECT)
   directKey     String?          @unique
   matchId       String?          @unique
@@ -220,7 +220,7 @@ model Conversation {
 }
 
 model ConversationParticipant {
-  id             String    @id @default(dbgenerated("cuid2()"))
+  id             String    @id @default(cuid(2))
   conversationId String
   userId         String
   joinedAt       DateTime  @default(now())
@@ -235,7 +235,7 @@ model ConversationParticipant {
 }
 
 model DirectMessage {
-  id             String      @id @default(dbgenerated("cuid2()"))
+  id             String      @id @default(cuid(2))
   conversationId String
   senderUserId   String?
   kind           MessageKind @default(USER)
@@ -252,7 +252,7 @@ model DirectMessage {
 }
 
 model Match {
-  id              String          @id @default(dbgenerated("cuid2()"))
+  id              String          @id @default(cuid(2))
   status          MatchStatus     @default(WAITING)
   visibility      MatchVisibility @default(PUBLIC)
   ruleType        RuleType        @default(GOMOKU)
@@ -278,7 +278,7 @@ model Match {
 }
 
 model MatchParticipant {
-  id                  String       @id @default(dbgenerated("cuid2()")) // playerId in Phase 0.2 API
+  id                  String       @id @default(cuid(2)) // playerId in Phase 0.2 API
   matchId             String
   userId              String?
   displayNameSnapshot String
@@ -299,7 +299,7 @@ model MatchParticipant {
 }
 
 model MatchMove {
-  id            String   @id @default(dbgenerated("cuid2()"))
+  id            String   @id @default(cuid(2))
   matchId       String
   participantId String
   moveNumber    Int
@@ -374,7 +374,7 @@ model UserAchievement {
 }
 
 model AnalyticsEvent {
-  id         String   @id @default(dbgenerated("cuid2()"))
+  id         String   @id @default(cuid(2))
   userId     String?
   sessionId  String?
   matchId    String?
