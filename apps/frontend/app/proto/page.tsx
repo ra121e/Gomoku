@@ -19,43 +19,44 @@ export default function ProtoPage() {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [listError, setListError] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function loadRooms() {
-      try {
-        const response = await fetch("/api/rooms", {
-          cache: "no-store",
-        });
+  async function loadRooms() {
+    try {
+      const response = await fetch("/api/rooms", {
+        cache: "no-store",
+      });
 
-        if (!response.ok) {
-          const errorPayload = (await response
-            .json()
-            .catch(() => null)) as ErrorResponse | null;
-          const message =
-            errorPayload?.message ??
-            errorPayload?.detail ??
-            errorPayload?.error ??
-            `Request failed with status ${response.status}`;
+      if (!response.ok) {
+        const errorPayload = (await response
+          .json()
+          .catch(() => null)) as ErrorResponse | null;
+        const message =
+          errorPayload?.message ??
+          errorPayload?.detail ??
+          errorPayload?.error ??
+          `Request failed with status ${response.status}`;
 
-          setListError(message);
-          setRooms([]);
-          return;
-        }
-
-        const data = (await response.json()) as Room[];
-        setRooms(data);
-        setListError(null);
-      } catch {
-        setListError("Network error while loading rooms");
+        setListError(message);
         setRooms([]);
+        return;
       }
-    }
 
-    void loadRooms();
-  }, []);
+      const data = (await response.json()) as Room[];
+      setRooms(data);
+      setListError(null);
+    } catch {
+      setListError("Network error while loading rooms");
+      setRooms([]);
+    }
+  }
+
+  // useEffect(() => {
+  //   void loadRooms();
+  // }, []);
 
   function handleSuccess(nextRoomId: string) {
     setRoomId(nextRoomId);
     setError(null);
+    void loadRooms();
   }
 
   function handleError(message: string) {
@@ -73,6 +74,9 @@ export default function ProtoPage() {
         </article>
 
         <article className="card">
+          <button type="button" className="btn" onClick={loadRooms}>
+            Load Rooms
+          </button>
           <p>rooms:</p>
           {listError ? <p role="alert">error: {listError}</p> : null}
           <ul>
