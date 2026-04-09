@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { RoomCreateButton } from "../../components/proto/RoomCreateButton";
 
 type Room = {
@@ -49,6 +49,11 @@ export default function ProtoPage() {
     }
   }
 
+  // Memo: if we want to use useEffect for loadRooms
+  // Put this at the top of this code
+  // import { useState } from "react";
+  //
+  // and activate these hundler
   // useEffect(() => {
   //   void loadRooms();
   // }, []);
