@@ -61,6 +61,7 @@ export async function GET() {
       method: "GET",
       cache: "no-store",
     });
+
     const contentType = response.headers.get("content-type");
     const rawBody = await response.text();
     if (contentType?.includes("application/json")) {
@@ -69,6 +70,7 @@ export async function GET() {
         return Response.json(data, { status: response.status });
       } catch {}
     }
+
     return new Response(rawBody, {
       status: response.status,
       headers: contentType ? { "content-type": contentType } : undefined,
