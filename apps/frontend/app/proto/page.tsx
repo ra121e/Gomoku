@@ -61,7 +61,6 @@ export default function ProtoPage() {
   function handleSuccess(nextRoomId: string) {
     setRoomId(nextRoomId);
     setError(null);
-    void loadRooms();
   }
 
   function handleError(message: string) {
