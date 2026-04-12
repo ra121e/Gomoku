@@ -33,7 +33,7 @@ export default function ProtoPage() {
 
   async function loadMatches() {
     try {
-      const response = await fetch("/api/rooms", {
+      const response = await fetch("/api/matches", {
         cache: "no-store",
       });
 

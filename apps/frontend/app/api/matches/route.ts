@@ -9,7 +9,7 @@ export async function POST(request: Request) {
     process.env["BACKEND_INTERNAL_URL"] ?? "http://backend:3001";
 
   try {
-    const response = await fetch(`${backendUrl}/api/rooms`, {
+    const response = await fetch(`${backendUrl}/api/matches`, {
       method: "POST",
       headers: request.headers,
       body: request.body,
@@ -57,7 +57,7 @@ export async function GET() {
   const backendUrl =
     process.env["BACKEND_INTERNAL_URL"] ?? "http://backend:3001";
   try {
-    const response = await fetch(`${backendUrl}/api/rooms`, {
+    const response = await fetch(`${backendUrl}/api/matches`, {
       method: "GET",
       cache: "no-store",
     });
