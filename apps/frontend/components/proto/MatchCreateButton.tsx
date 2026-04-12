@@ -63,12 +63,12 @@ export function MatchCreateButton({
       const participantId = result.participantId;
 
       if (!matchId) {
-        onError("Invalid response: roomId is missing");
+        onError("Invalid response: matchId is missing");
         return;
       }
 
       if (!participantId) {
-        onError("Invalid response: playerId is missing");
+        onError("Invalid response: participantId is missing");
         return;
       }
 
@@ -92,7 +92,7 @@ export function MatchCreateButton({
       onClick={handleClick}
       disabled={isLoading}
     >
-      {isLoading ? "Creating..." : "Create Room"}
+      {isLoading ? "Creating..." : "Create Match"}
     </button>
   );
 }

@@ -70,8 +70,8 @@ export default function ProtoPage() {
   //   void loadRooms();
   // }, []);
 
-  function handleSuccess(nextCreatedRoom: CreatedMatchInfo) {
-    setCreatedMatch(nextCreatedRoom);
+  function handleSuccess(nextCreatedMatch: CreatedMatchInfo) {
+    setCreatedMatch(nextCreatedMatch);
     setError(null);
   }
 
@@ -85,8 +85,10 @@ export default function ProtoPage() {
       <section className="panel">
         <article className="card">
           <MatchCreateButton onSuccess={handleSuccess} onError={handleError} />
-          {createdMatch ? <p>roomId: {createdMatch.matchId}</p> : null}
-          {createdMatch ? <p>playerId: {createdMatch.participantId}</p> : null}
+          {createdMatch ? <p>matchId: {createdMatch.matchId}</p> : null}
+          {createdMatch ? (
+            <p>participantId: {createdMatch.participantId}</p>
+          ) : null}
           {createdMatch?.role ? <p>role: {createdMatch.role}</p> : null}
           {createdMatch && createdMatch.seat !== undefined ? (
             <p>seat: {createdMatch.seat ?? "null"}</p>
@@ -112,7 +114,7 @@ export default function ProtoPage() {
                 {match.status ? <p>status: {match.status}</p> : null}
                 {match.participants?.length ? (
                   <p>
-                    players:{" "}
+                    participants:{" "}
                     {match.participants
                       .map(
                         (participant) =>
