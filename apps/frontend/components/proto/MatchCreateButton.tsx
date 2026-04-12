@@ -37,7 +37,7 @@ export function MatchCreateButton({
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/rooms", {
+      const response = await fetch("/api/matches", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
