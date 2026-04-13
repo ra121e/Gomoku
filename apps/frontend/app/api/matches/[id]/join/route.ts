@@ -27,7 +27,6 @@ export async function POST(
     }
 
     const rawBody = await response.text();
-    console.log("DEBUG rawBody:", rawBody); // ← 追加
 
     if (contentType?.includes("application/json")) {
       try {

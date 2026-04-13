@@ -13,7 +13,6 @@ export async function POST(
 ) {
   try {
     const { id: matchId } = await params;
-    console.log("DEBUG matchId:", matchId); // ← 追加
     const body = (await request.json()) as { displayName?: string };
     const displayName = body.displayName ?? "Player 2";
 
@@ -58,8 +57,6 @@ export async function POST(
 
       return { joiner };
     });
-
-    console.log("DEBUG joiner:", joiner); // ← 追加
 
     return Response.json({
       matchId,
