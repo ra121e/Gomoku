@@ -61,9 +61,10 @@ export function MatchJoinButton({
       }
 
       const result = (await response.json()) as JoinMatchResponse;
+      console.log("DEBUG result:", result); // ← 追加
       const participantId = result.participantId;
 
-      if (participantId) {
+      if (!participantId) {
         onError("Invalid response: participantId is missing");
         return;
       }
