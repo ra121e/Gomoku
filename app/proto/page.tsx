@@ -27,7 +27,6 @@ type ErrorResponse = {
 type MatchSession = {
   matchId: string;
   participantId: string;
-  seat: "BLACK" | "WHITE" | null;
 };
 
 export default function ProtoPage() {
@@ -88,7 +87,6 @@ export default function ProtoPage() {
     setSession({
       matchId: nextCreatedMatch.matchId,
       participantId: nextCreatedMatch.participantId,
-      seat: nextCreatedMatch.seat,
     });
   }
 
@@ -152,7 +150,6 @@ export default function ProtoPage() {
                     setSession({
                       matchId: info.matchId,
                       participantId: info.participantId,
-                      seat: info.seat,
                     });
                   }}
                   onError={(msg) => {
