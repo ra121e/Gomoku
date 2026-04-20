@@ -7,7 +7,7 @@ type SubscribeStatus = "idle" | "connecting" | "subscribed" | "error";
 
 export function useSocketGame(matchId: string | null, participantId: string | null) {
   const socketRef = useRef<Socket | null>(null);
-  const [status, setStatus] = useState<SubscribeStatue>("idle");
+  const [status, setStatus] = useState<SubscribeStatus>("idle");
 
   useEffect(() => {
     if (!matchId || !participantId) return;
