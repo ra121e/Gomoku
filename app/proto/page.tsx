@@ -27,7 +27,7 @@ type ErrorResponse = {
 type MatchSession = {
   matchId: string;
   participantId: string;
-  seat: "BLACK" | "WHITE";
+  seat: "BLACK" | "WHITE" | null;
 };
 
 export default function ProtoPage() {
