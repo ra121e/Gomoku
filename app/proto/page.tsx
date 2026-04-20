@@ -88,6 +88,7 @@ export default function ProtoPage() {
     setSession({
       matchId: nextCreatedMatch.matchId,
       participantId: nextCreatedMatch.participantId,
+      seat: nextCreatedMatch.seat,
     });
   }
 
@@ -148,7 +149,11 @@ export default function ProtoPage() {
                   onSuccess={(info) => {
                     setJoinedMatch(info);
                     setJoinError(null);
-                    setSession({ matchId: info.matchId, participantId: info.participantId });
+                    setSession({
+                      matchId: info.matchId,
+                      participantId: info.participantId,
+                      seat: info.seat,
+                    });
                   }}
                   onError={(msg) => {
                     setJoinError(msg);
