@@ -3,14 +3,29 @@ import type { Socket } from "socket.io";
 import type { MatchSubscribePayload } from "../../app/shared/match-events";
 import { matchRoomId } from "../lib/rooms";
 
-export function registerMatchSubscription(socket: Socket) {
-  socket.on("match:subscribe", async (payload: MatchSubscribePayload) => {
-    const { matchId, participantId } = payload;
+function isMatchSubscribePayload(payload: unknown): payload is MatchSubscribePayload {
+  if (!payload || typeof payload !== "object") {
+    return false;
+  }
 
-    if (!matchId || !participantId) {
+  const { matchId, participantId } = payload as Partial<MatchSubscribePayload>;
+
+  return (
+    typeof matchId === "string" &&
+    matchId.length > 0 &&
+    typeof participantId === "string" &&
+    participantId.length > 0
+  );
+}
+
+export function registerMatchSubscription(socket: Socket) {
+  socket.on("match:subscribe", async (payload: unknown) => {
+    if (!isMatchSubscribePayload(payload)) {
       socket.emit("error", { reason: "invalid_payload" });
       return;
     }
+
+    const { matchId, participantId } = payload;
 
     const room = matchRoomId(matchId);
     await socket.join(room);
