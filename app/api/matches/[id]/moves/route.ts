@@ -56,7 +56,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const { id: matchId } = await params;
     const body = (await request.json()) as SubmitMoveRequest;
 
-    if (!body.participantId || isValidPosition(body.position)) {
+    if (!body.participantId || !isValidPosition(body.position)) {
       return Response.json({ error: "invalid_payload" }, { status: 400 });
     }
 
@@ -147,7 +147,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       nextTurnSeat: result.payload.match.nextTurnSeat,
       lastMove: {
         moveNumber: result.payload.move.moveNumber,
-        participantid: result.payload.move.participantId,
+        participantId: result.payload.move.participantId,
         position,
         requestId: result.payload.move.requestId,
         stateVersion: result.payload.move.stateVersion,
@@ -162,7 +162,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       requesteId: result.payload.move.requestId,
     });
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientUnknownRequestError && error.code === "P2002") {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
       return Response.json(
         {
           error: "move_conflict",
