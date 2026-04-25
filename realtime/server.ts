@@ -6,7 +6,9 @@ import { Server as Engine } from "@socket.io/bun-engine";
 import { config } from "dotenv";
 import { Server } from "socket.io";
 
+import type { GameUpdatePayload } from "../app/shared/match-events";
 import { registerMatchSubscription } from "./handlers/match-subscription";
+import { matchRoomId } from "./lib/rooms";
 
 const currentDirectory = dirname(fileURLToPath(import.meta.url));
 const rootEnvPath = resolve(currentDirectory, "../.env");
@@ -59,6 +61,24 @@ io.on("connection", (socket) => {
 });
 
 const engineHandler = engine.handler();
+
+async function handleInternalGameUpdate(request: Request) {
+  const payload = (await request.json()) as Partial<GameUpdatePayload>;
+  if (
+    !payload.matchId ||
+    !payload.lastMove ||
+    typeof payload.stateVersion !== "number" ||
+    typeof payload.lastMove.moveNumber !== "number" ||
+    typeof payload.lastMove.participantId !== "string"
+  ) {
+    return Response.json({ error: "invalid_payload" }, { status: 400 });
+  }
+
+  const room = matchRoomId(payload.matchId);
+  io.to(room).emit("game:update", payload as GameUpdatePayload);
+  console.log(`[readltime] broadcat game:update to ${room}`);
+  return Response.json({ ok: true, room });
+}
 
 Bun.serve({
   hostname,
