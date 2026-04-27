@@ -76,7 +76,7 @@ async function handleInternalGameUpdate(request: Request) {
 
   const room = matchRoomId(payload.matchId);
   io.to(room).emit("game:update", payload as GameUpdatePayload);
-  console.log(`[readltime] broadcat game:update to ${room}`);
+  console.log(`[readltime] broadcast game:update to ${room}`);
   return Response.json({ ok: true, room });
 }
 
@@ -92,6 +92,10 @@ Bun.serve({
         status: "ok",
         checkedAt: new Date().toISOString(),
       });
+    }
+
+    if (url.pathname === "/internal/game-update" && request.method === "POST") {
+      return handleInternalGameUpdate(request);
     }
 
     if (url.pathname === socketPath) {
