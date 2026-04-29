@@ -198,8 +198,12 @@ export function ProtoClient() {
           </ul>
         </article>
         <article className="card">
-          <p>discription status: {status}</p>
-          {session ? <p>current match: {session.matchId}</p> : <p>Create or join a match first.</p>}
+          <p>{t("descriptionStatus", { status })}</p>
+          {session ? (
+            <p>{t("currentMatch", { matchId: session.matchId })}</p>
+          ) : (
+            <p>{t("createOrJoinFirst")}</p>
+          )}
 
           {session ? (
             <MatchMoveForm
@@ -218,24 +222,31 @@ export function ProtoClient() {
 
           {submittedMove ? (
             <p>
-              submitted: ({submittedMove.position.x}, {submittedMove.position.y} / requestId: )
-              {submittedMove.requestId ?? "null"}
+              {t("submittedMove", {
+                x: submittedMove.position.x,
+                y: submittedMove.position.y,
+                requestId: submittedMove.requestId ?? t("nullValue"),
+              })}
             </p>
           ) : null}
-          {moveError ? <p role="alert">error: {moveError}</p> : null}
+          {moveError ? <p role="alert">{t("moveError", { message: moveError })}</p> : null}
 
           {lastUpdate ? (
             <>
-              <p>game status: {lastUpdate.status}</p>
-              <p>stateVersion: {lastUpdate.stateVersion}</p>
-              <p>nextTurnSeat: {lastUpdate.nextTurnSeat ?? "null"}</p>
+              <p>{t("gameStatus", { status: lastUpdate.status })}</p>
+              <p>{t("stateVersion", { version: lastUpdate.stateVersion })}</p>
+              <p>{t("nextTurnSeat", { seat: lastUpdate.nextTurnSeat ?? t("nullValue") })}</p>
               {lastUpdate.lastMove ? (
                 <p>
-                  lastMove: #{lastUpdate.lastMove.moveNumber} / {lastUpdate.lastMove.participantId}{" "}
-                  / ({lastUpdate.lastMove.position.x}, {lastUpdate.lastMove.position.y})
+                  {t("lastMove", {
+                    moveNumber: lastUpdate.lastMove.moveNumber,
+                    participantId: lastUpdate.lastMove.participantId,
+                    x: lastUpdate.lastMove.position.x,
+                    y: lastUpdate.lastMove.position.y,
+                  })}
                 </p>
               ) : (
-                <p>lastMove: none</p>
+                <p>{t("lastMoveNone")}</p>
               )}
             </>
           ) : null}

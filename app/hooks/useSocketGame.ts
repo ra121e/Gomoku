@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { io, type Socket } from "socket.io-client";
 
-import type { GameUpdatePayload } from "@/shared/match-events";
+import type { GameUpdatePayload } from "../../shared/match-events";
 
 type SubscribeStatus = "idle" | "connecting" | "subscribed" | "error";
 
