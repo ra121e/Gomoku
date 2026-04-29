@@ -33,14 +33,18 @@ function isValidPosition(value: SubmitMoveRequest["position"]): value is Positio
   );
 }
 
-async function publishGameUpdate(payload: GameUpdatePayload) {
+async function publishGameUpdate(
+  payload: GameUpdatePayload,
+  timeoutMs = Number(process.env["REALTIME_PUBLISH_TIMEOUT_MS"] ?? 2000),
+) {
   const realtimeInternalUrl =
     process.env["REALTIME_INTERNAL_URL"] ?? "http://realtime:3001/internal/game-update";
-  // Allow caller to provide a short timeout so publish doesn't block the request
-  // (default: 2000ms). On failure we throw so callers can decide how to handle it.
-  async function doFetch(timeoutMs = 2000) {
+
+  // Allow caller to provide a short timeout so publish doesn't block the request.
+  // On failure we throw so callers can decide how to handle it.
+  async function doFetch(ms: number) {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    const timeoutId = setTimeout(() => controller.abort(), ms);
     try {
       const response = await fetch(realtimeInternalUrl, {
         method: "POST",
@@ -60,7 +64,7 @@ async function publishGameUpdate(payload: GameUpdatePayload) {
     }
   }
 
-  return doFetch();
+  return doFetch(timeoutMs);
 }
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -171,7 +175,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     // that was already persisted.
     try {
       const timeoutMs = Number(process.env["REALTIME_PUBLISH_TIMEOUT_MS"] ?? 2000);
-      await publishGameUpdate(gameUpdate).catch((e) => Promise.reject(e));
+      await publishGameUpdate(gameUpdate, timeoutMs);
       // Note: we intentionally await here to keep ordering guarantees for
       // connected clients; if you prefer fire-and-forget, call without await.
     } catch (publishError) {
