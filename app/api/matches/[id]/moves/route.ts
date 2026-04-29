@@ -36,19 +36,31 @@ function isValidPosition(value: SubmitMoveRequest["position"]): value is Positio
 async function publishGameUpdate(payload: GameUpdatePayload) {
   const realtimeInternalUrl =
     process.env["REALTIME_INTERNAL_URL"] ?? "http://realtime:3001/internal/game-update";
+  // Allow caller to provide a short timeout so publish doesn't block the request
+  // (default: 2000ms). On failure we throw so callers can decide how to handle it.
+  async function doFetch(timeoutMs = 2000) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const response = await fetch(realtimeInternalUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+        cache: "no-store",
+        signal: controller.signal,
+      });
 
-  const response = await fetch(realtimeInternalUrl, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-    cache: "no-store",
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to publish game:update(${response.status})`);
+      if (!response.ok) {
+        throw new Error(`Failed to publish game:update(${response.status})`);
+      }
+    } finally {
+      clearTimeout(timeoutId);
+    }
   }
+
+  return doFetch();
 }
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -154,12 +166,24 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       },
     };
 
-    await publishGameUpdate(gameUpdate);
+    // Try to publish the realtime update, but do NOT surface publish failures
+    // as a move submission failure. This avoids the client retrying a move
+    // that was already persisted.
+    try {
+      const timeoutMs = Number(process.env["REALTIME_PUBLISH_TIMEOUT_MS"] ?? 2000);
+      await publishGameUpdate(gameUpdate).catch((e) => Promise.reject(e));
+      // Note: we intentionally await here to keep ordering guarantees for
+      // connected clients; if you prefer fire-and-forget, call without await.
+    } catch (publishError) {
+      console.error(`[matches/${matchId}] realtime publish failed:`, getErrorMessage(publishError));
+      // TODO: persist the failed broadcast to an outbox table or enqueue for retry.
+      // For now we swallow the error so the client receives the accepted move.
+    }
 
     return Response.json({
       ok: true,
       accepted: true,
-      requesteId: result.payload.move.requestId,
+      requestId: result.payload.move.requestId,
     });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
