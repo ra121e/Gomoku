@@ -13,7 +13,8 @@ export function MiniBoard({ board, mySeat, nextTurnSeat, onCellClick }: Props) {
   return (
     <div style={{ display: "flex", gap: 4 }}>
       {row.map((cell, x) => {
-        const isMyTurn = nySeat === nextTurnSeat;
+        const isMyTurn = mySeat === nextTurnSeat;
+        const clickable = isMyTurn && !cell.occupied;
 
         return (
           <button
