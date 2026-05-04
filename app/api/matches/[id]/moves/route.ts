@@ -187,7 +187,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         payload: {
           match: updatedMatch,
           move,
-          participant: match.participants,
+          participants: match.participants,
           allmoves: [...match.moves, move],
         },
       };
