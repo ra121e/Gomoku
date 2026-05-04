@@ -214,7 +214,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       endReason: result.payload.match.endReason,
       participants: result.payload.participants.map((p: MatchParticipant) => ({
         participantId: p.id,
-        displayName: p.displayNamesnapshot,
+        displayName: p.displayNameSnapshot,
         role: p.role,
         seat: p.seat,
       })),
