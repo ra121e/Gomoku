@@ -212,7 +212,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       nextTurnSeat: result.payload.match.nextTurnSeat,
       winningSeat: result.payload.match.winningSeat,
       endReason: result.payload.match.endReason,
-      participants: result.payload.match.participants.map((p: MatchParticipant) => ({
+      participants: result.payload.participants.map((p: MatchParticipant) => ({
         participantId: p.id,
         displayName: p.displayNamesnapshot,
         role: p.role,
