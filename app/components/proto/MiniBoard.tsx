@@ -8,8 +8,6 @@ type Props = {
 };
 
 export function MiniBoard({ board, mySeat, nextTurnSeat, onCellClick }: Props) {
-  const row = board[0] ?? [];
-
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
       {board.map((row, y) => (
