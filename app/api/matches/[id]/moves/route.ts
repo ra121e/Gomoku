@@ -199,8 +199,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
     const board = buildBoard(
       result.payload.match.boardSize,
-      result.payload.match.participants,
-      result.payload.match.moves,
+      result.payload.participants,
+      result.payload.allmoves,
     );
 
     const gameUpdate: GameUpdatePayload = {
