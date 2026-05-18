@@ -1,8 +1,6 @@
 import { getCurrentSession } from "@/lib/auth";
 import { getProfileStatsForUser } from "@/lib/stats/profile-stats";
 
-export const dynamic = "force-dynamic";
-
 function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "Unknown error";
 }
