@@ -4,6 +4,7 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 
 import { Badge, MetricCard, PageHeader, PageShell, Surface } from "@/components/gomoku-ui";
+import LeaderboardClient from "@/components/leaderboard-client";
 import LeaderboardTable from "@/components/leaderboardtable";
 import { PageLoadingShell } from "@/components/page-loading-shell";
 import { getLeaderboardEntries, type LeaderboardEntry } from "@/lib/leaderboard";
@@ -79,31 +80,7 @@ async function LeaderBoardContent({ params }: LeaderBoardProps) {
             />
           ) : (
             <>
-              <LeaderboardTable entries={entries} />
-              <div className="rounded-md border border-[var(--brass)]/35 bg-[linear-gradient(90deg,rgba(216,172,89,0.16),rgba(255,255,255,0.03))] p-4">
-                <div className="grid gap-4 md:grid-cols-[120px_minmax(0,1fr)_repeat(3,110px)] md:items-center">
-                  <div>
-                    <p className="m-0 text-xs font-black tracking-[0.16em] text-[var(--muted-text)] uppercase">
-                      {t("page.spotlight.rankLabel")}
-                    </p>
-                    <p className="m-0 font-serif text-4xl font-black text-[var(--brass)]">3</p>
-                  </div>
-                  <div className="flex min-w-0 items-center gap-3">
-                    <span className="grid size-14 place-items-center rounded-full border border-[var(--brass)]/45 bg-white/[0.08] font-black">
-                      K
-                    </span>
-                    <div>
-                      <p className="m-0 text-xl font-black">Kuroishi</p>
-                      <p className="m-0 text-sm text-[var(--brass)]">
-                        {t("page.spotlight.rating", { rating: "1,842" })}
-                      </p>
-                    </div>
-                  </div>
-                  <MiniMetric label={t("table.wins")} value="254" />
-                  <MiniMetric label={t("table.losses")} value="81" />
-                  <MiniMetric label={t("table.winRate")} value="75.8%" />
-                </div>
-              </div>
+              <LeaderboardClient initial={{ entries, currentUser: null }} />
             </>
           )}
         </Surface>
