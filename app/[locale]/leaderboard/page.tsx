@@ -5,9 +5,9 @@ import { Suspense } from "react";
 
 import { Badge, MetricCard, PageHeader, PageShell, Surface } from "@/components/gomoku-ui";
 import LeaderboardClient from "@/components/leaderboard-client";
-import LeaderboardTable from "@/components/leaderboardtable";
 import { PageLoadingShell } from "@/components/page-loading-shell";
-import { getLeaderboardEntries, type LeaderboardEntry } from "@/lib/leaderboard";
+import { getCurrentSession } from "@/lib/auth";
+import { getLeaderboardSnapshot, type LeaderboardSnapshot } from "@/lib/leaderboard";
 
 type LeaderBoardProps = {
   params: Promise<{
@@ -29,11 +29,12 @@ async function LeaderBoardContent({ params }: LeaderBoardProps) {
   await connection();
 
   const t = await getTranslations({ locale, namespace: "leaderboard" });
-  let entries: LeaderboardEntry[] = [];
+  let snapshot: LeaderboardSnapshot = { entries: [], currentUser: null };
   let leaderboardUnavailable = false;
 
   try {
-    entries = await getLeaderboardEntries();
+    const session = await getCurrentSession();
+    snapshot = await getLeaderboardSnapshot(session?.user.id ?? null);
   } catch (error) {
     leaderboardUnavailable = true;
     console.error("Failed to load leaderboard entries.", error);
@@ -80,7 +81,7 @@ async function LeaderBoardContent({ params }: LeaderBoardProps) {
             />
           ) : (
             <>
-              <LeaderboardClient initial={{ entries, currentUser: null }} />
+              <LeaderboardClient initial={snapshot} />
             </>
           )}
         </Surface>
@@ -163,15 +164,6 @@ function LeaderboardUnavailable({ description, title }: { description: string; t
         <h2 className="m-0 font-serif text-3xl leading-none font-black">{title}</h2>
         <p className="mt-3 mb-0 text-sm leading-6 text-[var(--muted-text)]">{description}</p>
       </div>
-    </div>
-  );
-}
-
-function MiniMetric({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <p className="m-0 text-xl font-black tabular-nums">{value}</p>
-      <p className="m-0 text-xs font-bold text-[var(--muted-text)]">{label}</p>
     </div>
   );
 }

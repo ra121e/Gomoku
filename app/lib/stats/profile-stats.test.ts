@@ -5,14 +5,20 @@ import type { MatchHistoryEntry } from "../matches/match-history";
 
 const findUnique = mock();
 const findManyAchievements = mock();
-const count = mock();
+const getLeaderboardRank = mock();
 const getMatchHistoryForUser = mock();
+
+await mock.module("@/lib/leaderboard", () => ({
+  LEADERBOARD_BOARD_SIZE: 15,
+  formatWinRate: (wins: number, matchesPlayed: number) =>
+    matchesPlayed === 0 ? "0.00%" : `${((wins / matchesPlayed) * 100).toFixed(2)}%`,
+  getLeaderboardRank,
+}));
 
 await mock.module("@/lib/prisma", () => ({
   prisma: {
     userGameStats: {
       findUnique,
-      count,
     },
     userAchievement: {
       findMany: findManyAchievements,
@@ -29,13 +35,13 @@ const { getProfileStatsForUser, PROFILE_RECENT_MATCHES_LIMIT } = await import(".
 beforeEach(() => {
   findUnique.mockReset();
   findManyAchievements.mockReset();
-  count.mockReset();
+  getLeaderboardRank.mockReset();
   getMatchHistoryForUser.mockReset();
 
   findUnique.mockResolvedValue(null);
   findManyAchievements.mockResolvedValue([]);
   getMatchHistoryForUser.mockResolvedValue([]);
-  count.mockResolvedValue(0);
+  getLeaderboardRank.mockResolvedValue(null);
 });
 
 describe("profile stats", () => {
@@ -65,7 +71,13 @@ describe("profile stats", () => {
       achievementPoints: 0,
     });
     expect(getMatchHistoryForUser).toHaveBeenCalledWith("user-ada", PROFILE_RECENT_MATCHES_LIMIT);
-    expect(count).not.toHaveBeenCalled();
+    expect(getLeaderboardRank).toHaveBeenCalledWith({
+      rating: null,
+      wins: 0,
+      losses: 0,
+      matchesPlayed: 0,
+      botMatchesPlayed: 0,
+    });
   });
 
   test("includes rank, achievements, progression, and recent matches", async () => {
@@ -75,6 +87,7 @@ describe("profile stats", () => {
       losses: 1,
       draws: 0,
       matchesPlayed: 4,
+      botMatchesPlayed: 1,
       currentStreak: 2,
       bestStreak: 2,
       lastPlayedAt: new Date("2026-05-14T09:12:00.000Z"),
@@ -122,7 +135,7 @@ describe("profile stats", () => {
     ];
 
     getMatchHistoryForUser.mockResolvedValueOnce(matchHistory);
-    count.mockResolvedValueOnce(2);
+    getLeaderboardRank.mockResolvedValueOnce(3);
 
     const snapshot = await getProfileStatsForUser("user-ada");
 
@@ -156,19 +169,12 @@ describe("profile stats", () => {
       endReason: "five_in_a_row",
       moveCount: 42,
     });
-    expect(count).toHaveBeenCalledWith({
-      where: {
-        boardSize: 15,
-        ruleType: RuleType.GOMOKU,
-        matchesPlayed: { gt: 0 },
-        OR: [
-          { rating: { gt: 1200 } },
-          {
-            rating: 1200,
-            OR: [{ wins: { gt: 3 } }, { wins: 3, losses: { lt: 1 } }],
-          },
-        ],
-      },
+    expect(getLeaderboardRank).toHaveBeenCalledWith({
+      rating: 1200,
+      wins: 3,
+      losses: 1,
+      matchesPlayed: 4,
+      botMatchesPlayed: 1,
     });
   });
 });

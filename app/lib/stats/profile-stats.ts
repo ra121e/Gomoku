@@ -1,6 +1,6 @@
 import type { Prisma } from "../../../generated/prisma/client";
 import { MatchResult, Role, RuleType } from "../../../generated/prisma/enums";
-import { LEADERBOARD_BOARD_SIZE, formatWinRate } from "../leaderboard";
+import { LEADERBOARD_BOARD_SIZE, formatWinRate, getLeaderboardRank } from "../leaderboard";
 import { getMatchHistoryForUser, type MatchHistoryEntry } from "../matches/match-history";
 import { prisma } from "../prisma";
 import { calculateAchievementPoints, calculateLevelProgress } from "./progression";
@@ -12,6 +12,7 @@ type RankedStats = {
   wins: number;
   losses: number;
   matchesPlayed: number;
+  botMatchesPlayed: number;
 };
 
 export type ProfileRecentMatch = {
@@ -61,16 +62,11 @@ const statsSelect = {
   losses: true,
   draws: true,
   matchesPlayed: true,
+  botMatchesPlayed: true,
   currentStreak: true,
   bestStreak: true,
   lastPlayedAt: true,
 } satisfies Prisma.UserGameStatsSelect;
-
-const leaderboardBaseWhere = {
-  boardSize: LEADERBOARD_BOARD_SIZE,
-  ruleType: RuleType.GOMOKU,
-  matchesPlayed: { gt: 0 },
-} satisfies Prisma.UserGameStatsWhereInput;
 
 function getOpponent(entry: MatchHistoryEntry, currentUserId: string) {
   const opponents = entry.participants.filter(
@@ -106,32 +102,17 @@ function toRecentMatch(entry: MatchHistoryEntry, currentUserId: string): Profile
 }
 
 async function getRankForUser(stats: RankedStats | null): Promise<number | null> {
-  if (!stats || stats.matchesPlayed === 0) {
+  if (!stats) {
     return null;
   }
 
-  const aheadByRating =
-    stats.rating === null ? { rating: { not: null } } : { rating: { gt: stats.rating } };
-
-  const aheadWithinRating = {
-    rating: stats.rating === null ? null : stats.rating,
-    OR: [
-      { wins: { gt: stats.wins } },
-      {
-        wins: stats.wins,
-        losses: { lt: stats.losses },
-      },
-    ],
-  };
-
-  const aheadCount = await prisma.userGameStats.count({
-    where: {
-      ...leaderboardBaseWhere,
-      OR: [aheadByRating, aheadWithinRating],
-    },
+  return getLeaderboardRank({
+    rating: stats.rating,
+    wins: stats.wins,
+    losses: stats.losses,
+    matchesPlayed: stats.matchesPlayed,
+    botMatchesPlayed: stats.botMatchesPlayed,
   });
-
-  return aheadCount + 1;
 }
 
 export async function getProfileStatsForUser(userId: string): Promise<ProfileStatsSnapshot> {
@@ -189,6 +170,7 @@ export async function getProfileStatsForUser(userId: string): Promise<ProfileSta
     wins: stats.wins,
     losses: stats.losses,
     matchesPlayed: stats.matchesPlayed,
+    botMatchesPlayed: statsRow?.botMatchesPlayed ?? 0,
   });
 
   return {
