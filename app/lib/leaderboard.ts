@@ -93,8 +93,8 @@ export function toLeaderboardEntries(stats: LeaderboardStat[]): LeaderboardEntry
 }
 
 export async function getLeaderboardEntries(): Promise<LeaderboardEntry[]> {
-  "use cache";
-  cacheLife("minutes");
+  //  "use cache";
+  //  cacheLife("minutes");
 
   const stats = await prisma.userGameStats.findMany(leaderboardQueryArgs);
 
