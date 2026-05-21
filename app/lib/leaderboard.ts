@@ -145,7 +145,7 @@ export async function getLeaderboardEntries(): Promise<LeaderboardEntry[]> {
       take: LEADERBOARD_FETCH_LIMIT,
     } as Prisma.UserGameStatsFindManyArgs;
 
-    const stats = await prisma.userGameStats.findMany(args);
+    const stats = (await prisma.userGameStats.findMany(args)) as unknown as LeaderboardStat[];
 
     if (stats.length === 0) break;
 
