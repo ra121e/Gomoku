@@ -170,6 +170,34 @@ describe("profile stats", () => {
       totalXp: 565,
       achievementPoints: 10,
     });
+    expect(snapshot.progression.progress).toBeCloseTo(0.13, 2);
+
+    expect(snapshot.achievements).toEqual([
+      {
+        code: "first_win",
+        points: 10,
+        progress: 1,
+        completedAt: "2026-05-01T00:00:00.000Z",
+      },
+      {
+        code: "ai_win",
+        points: 5,
+        progress: 0,
+        completedAt: null,
+      },
+    ]);
+
+    expect(snapshot.recentMatches).toEqual([
+      {
+        matchId: "match-1",
+        opponentDisplayName: "Grace",
+        opponentUserId: "user-grace",
+        finishedAt: "2026-05-14T09:12:00.000Z",
+        result: MatchResult.WIN,
+        endReason: "five_in_a_row",
+        moveCount: 42,
+      },
+    ]);
 
     expect(snapshot.recentMatchesPagination).toEqual({
       page: 2,
@@ -177,5 +205,27 @@ describe("profile stats", () => {
       totalMatches: 6,
       totalPages: 2,
     });
+  });
+
+  test("normalizes recentMatchesLimit bounds", async () => {
+    // non-integer -> page size
+    await getProfileStatsForUser("user-ada", { recentMatchesLimit: 2.5, recentMatchesPage: 1 });
+
+    expect(getMatchHistoryPageForUser).toHaveBeenCalledWith(
+      "user-ada",
+      1,
+      PROFILE_RECENT_MATCHES_PAGE_SIZE,
+    );
+
+    // too large -> clamped to max
+    const { PROFILE_RECENT_MATCHES_MAX_LIMIT } = await import("./profile-stats");
+
+    await getProfileStatsForUser("user-ada", { recentMatchesLimit: 9999, recentMatchesPage: 1 });
+
+    expect(getMatchHistoryPageForUser).toHaveBeenCalledWith(
+      "user-ada",
+      1,
+      PROFILE_RECENT_MATCHES_MAX_LIMIT,
+    );
   });
 });
