@@ -7,7 +7,12 @@ import { Badge, MetricCard, PageHeader, PageShell, Surface } from "@/components/
 import LeaderboardClient from "@/components/leaderboard-client";
 import { PageLoadingShell } from "@/components/page-loading-shell";
 import { getCurrentSession } from "@/lib/auth";
-import { getLeaderboardSnapshot, type LeaderboardSnapshot } from "@/lib/leaderboard";
+import {
+  getLeaderboardSnapshot,
+  type LeaderboardSnapshot,
+  type LeaderboardEntry,
+} from "@/lib/leaderboard";
+import { getSeasonSnapshot, type SeasonSnapshot } from "@/lib/stats/season-stats";
 
 type LeaderBoardProps = {
   params: Promise<{
@@ -23,6 +28,43 @@ export default function LeaderBoard({ params }: LeaderBoardProps) {
   );
 }
 
+type RankBand = "dan" | "kyu" | "unranked";
+
+function countRankBands(entries: LeaderboardEntry[]) {
+  return entries.reduce(
+    (accumulator, entry) => {
+      const band = getRankBand(entry.rating);
+      accumulator[band] += 1;
+      return accumulator;
+    },
+    {
+      dan: 0,
+      kyu: 0,
+      unranked: 0,
+    } as Record<RankBand, number>,
+  );
+}
+
+function getRankBand(rating: number): RankBand {
+  if (rating >= 1800) return "dan";
+  if (rating >= 1000) return "kyu";
+  return "unranked";
+}
+
+function LeaderboardEmptyState({ description, title }: { description: string; title: string }) {
+  return (
+    <div className="grid min-h-[220px] place-items-center rounded-md border border-[var(--panel-border-soft)] bg-white/[0.025] p-6 text-center">
+      <div className="max-w-sm">
+        <div className="mx-auto mb-3 grid size-12 place-items-center rounded-md border border-[var(--panel-border-soft)] bg-white/[0.03]">
+          <Medal aria-hidden="true" className="size-6 text-[var(--brass)]" />
+        </div>
+        <h3 className="m-0 mb-2 font-serif text-xl font-black">{title}</h3>
+        <p className="m-0 text-sm leading-6 text-[var(--muted-text)]">{description}</p>
+      </div>
+    </div>
+  );
+}
+
 async function LeaderBoardContent({ params }: LeaderBoardProps) {
   const { locale } = await params;
   setRequestLocale(locale);
@@ -30,15 +72,58 @@ async function LeaderBoardContent({ params }: LeaderBoardProps) {
 
   const t = await getTranslations({ locale, namespace: "leaderboard" });
   let snapshot: LeaderboardSnapshot = { entries: [], currentUser: null };
+  let seasonSnapshot: SeasonSnapshot = {
+    daysLeft: 0,
+    ratedMatchCount: 0,
+    season: {
+      daysLeft: 0,
+      end: new Date(0),
+      season: 1,
+      start: new Date(0),
+      year: 1970,
+    },
+  };
   let leaderboardUnavailable = false;
 
   try {
     const session = await getCurrentSession();
-    snapshot = await getLeaderboardSnapshot(session?.user.id ?? null);
+    const [leaderboardData, seasonData] = await Promise.all([
+      getLeaderboardSnapshot(session?.user.id ?? null),
+      getSeasonSnapshot(),
+    ]);
+    snapshot = leaderboardData;
+    seasonSnapshot = seasonData;
   } catch (error) {
     leaderboardUnavailable = true;
     console.error("Failed to load leaderboard entries.", error);
   }
+
+  const entries = snapshot.entries ?? [];
+  const bandCounts = countRankBands(entries);
+  const distribution =
+    entries.length > 0
+      ? [
+          {
+            key: "dan",
+            label: t("page.distribution.labels.dan"),
+            count: bandCounts.dan,
+            color: "bg-[var(--brass)]",
+          },
+          {
+            key: "kyu",
+            label: t("page.distribution.labels.kyu"),
+            count: bandCounts.kyu,
+            color: "bg-[var(--mint)]",
+          },
+          {
+            key: "unranked",
+            label: t("page.distribution.labels.unranked"),
+            count: bandCounts.unranked,
+            color: "bg-[var(--danger)]",
+          },
+        ].map((band) => ({ ...band, share: `${Math.round((band.count / entries.length) * 100)}%` }))
+      : [];
+  const topPlayers = entries.slice(0, 3);
 
   return (
     <PageShell>
@@ -88,9 +173,17 @@ async function LeaderBoardContent({ params }: LeaderBoardProps) {
 
         <aside className="grid content-start gap-5">
           <Surface eyebrow={t("page.season.eyebrow")} icon={Medal} title={t("page.season.title")}>
-            <div className="grid gap-3">
-              <MetricCard label={t("page.season.daysLeft")} tone="brass" value="18" />
-              <MetricCard label={t("page.season.ratedMatches")} tone="mint" value="12,408" />
+            <div className="grid gap-3 sm:grid-cols-2">
+              <MetricCard
+                label={t("page.season.daysLeft")}
+                tone="brass"
+                value={seasonSnapshot.daysLeft}
+              />
+              <MetricCard
+                label={t("page.season.ratedMatches")}
+                tone="mint"
+                value={seasonSnapshot.ratedMatchCount.toLocaleString()}
+              />
             </div>
           </Surface>
 
@@ -99,26 +192,29 @@ async function LeaderBoardContent({ params }: LeaderBoardProps) {
             icon={BarChart3}
             title={t("page.distribution.title")}
           >
-            <div className="grid gap-3">
-              {[
-                [t("page.distribution.labels.dan"), "22%", "bg-[var(--brass)]"],
-                [t("page.distribution.labels.kyu"), "54%", "bg-[var(--mint)]"],
-                [t("page.distribution.labels.unranked"), "24%", "bg-[var(--danger)]"],
-              ].map(([label, value, color]) => (
-                <div key={label}>
-                  <div className="mb-2 flex items-center justify-between text-sm font-bold">
-                    <span>{label}</span>
-                    <span className="text-[var(--muted-text)] tabular-nums">{value}</span>
+            {entries.length === 0 ? (
+              <LeaderboardEmptyState
+                description={t("table.empty.description")}
+                title={t("table.empty.title")}
+              />
+            ) : (
+              <div className="grid gap-3">
+                {distribution.map((band) => (
+                  <div key={band.key}>
+                    <div className="mb-2 flex items-center justify-between text-sm font-bold">
+                      <span>{band.label}</span>
+                      <span className="text-[var(--muted-text)] tabular-nums">{band.share}</span>
+                    </div>
+                    <span className="block h-2 overflow-hidden rounded-full bg-white/[0.08]">
+                      <span
+                        className={`block h-full rounded-full ${band.color}`}
+                        style={{ width: band.share }}
+                      />
+                    </span>
                   </div>
-                  <span className="block h-2 overflow-hidden rounded-full bg-white/[0.08]">
-                    <span
-                      className={`block h-full rounded-full ${color}`}
-                      style={{ width: value }}
-                    />
-                  </span>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </Surface>
 
           <Surface
@@ -126,24 +222,41 @@ async function LeaderBoardContent({ params }: LeaderBoardProps) {
             icon={Users}
             title={t("page.topPlayers.title")}
           >
-            <div className="grid gap-2">
-              {["Hoshi", "RenjuMaster", "Kuroishi"].map((name, index) => (
-                <div
-                  key={name}
-                  className="grid min-h-12 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-md border border-[var(--panel-border-soft)] bg-white/[0.035] px-3"
-                >
-                  <span className="font-serif text-2xl font-bold text-[var(--brass)]">
-                    {index + 1}
-                  </span>
-                  <span className="truncate font-black">{name}</span>
-                  <Badge tone={index === 0 ? "brass" : "neutral"}>
-                    {index === 0
-                      ? t("page.topPlayers.badges.mvp")
-                      : t("page.topPlayers.badges.boost")}
-                  </Badge>
-                </div>
-              ))}
-            </div>
+            {topPlayers.length === 0 ? (
+              <LeaderboardEmptyState
+                description={t("table.empty.description")}
+                title={t("table.empty.title")}
+              />
+            ) : (
+              <div className="grid gap-2">
+                {topPlayers.map((entry) => {
+                  const band = getRankBand(entry.rating);
+                  const bandLabel =
+                    band === "dan"
+                      ? t("page.distribution.labels.dan")
+                      : band === "kyu"
+                        ? t("page.distribution.labels.kyu")
+                        : t("page.distribution.labels.unranked");
+
+                  return (
+                    <div
+                      key={entry.playerId}
+                      className="grid min-h-12 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-md border border-[var(--panel-border-soft)] bg-white/[0.035] px-3"
+                    >
+                      <span className="font-serif text-2xl font-bold text-[var(--brass)]">
+                        {entry.rank}
+                      </span>
+                      <span className="truncate font-black">{entry.player}</span>
+                      <Badge
+                        tone={entry.rank === 1 ? "brass" : entry.rank === 2 ? "mint" : "neutral"}
+                      >
+                        {bandLabel}
+                      </Badge>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </Surface>
         </aside>
       </section>
