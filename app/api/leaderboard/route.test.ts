@@ -1,17 +1,25 @@
 import { beforeEach, describe, expect, mock, test } from "bun:test";
 
+import { createAuthModuleMock } from "@/test-utils/auth-module-mock";
+
 const getCurrentSessionIdentity = mock();
 const getLeaderboardSnapshot = mock();
 
-await mock.module("@/lib/auth", () => ({
-  getCurrentSessionIdentity,
-}));
+await mock.module("@/lib/auth", () =>
+  createAuthModuleMock({
+    getCurrentSessionIdentity,
+  }),
+);
 
 await mock.module("@/lib/leaderboard", () => ({
   getLeaderboardSnapshot,
 }));
 
 const route = await import("./route");
+
+function request(path = "http://localhost/api/leaderboard") {
+  return new Request(path);
+}
 
 beforeEach(() => {
   getCurrentSessionIdentity.mockReset();
@@ -49,7 +57,7 @@ beforeEach(() => {
 
 describe("GET /api/leaderboard", () => {
   test("returns the leaderboard snapshot for signed-in users", async () => {
-    const response = await route.GET();
+    const response = await route.GET(request());
     const payload = await response.json();
 
     expect(response.status).toBe(200);
@@ -63,7 +71,7 @@ describe("GET /api/leaderboard", () => {
   test("allows anonymous access", async () => {
     getCurrentSessionIdentity.mockResolvedValueOnce(null);
 
-    const response = await route.GET();
+    const response = await route.GET(request());
     const payload = await response.json();
 
     expect(response.status).toBe(200);
@@ -74,7 +82,7 @@ describe("GET /api/leaderboard", () => {
   });
 
   test("passes friends scope from the request query", async () => {
-    const response = await route.GET(new Request("http://localhost/api/leaderboard?scope=friends"));
+    const response = await route.GET(request("http://localhost/api/leaderboard?scope=friends"));
     const payload = await response.json();
 
     expect(response.status).toBe(200);
@@ -87,7 +95,7 @@ describe("GET /api/leaderboard", () => {
   test("returns a server error when snapshot fails to load", async () => {
     getLeaderboardSnapshot.mockRejectedValueOnce(new Error("boom"));
 
-    const response = await route.GET();
+    const response = await route.GET(request());
     const payload = await response.json();
 
     expect(response.status).toBe(500);
