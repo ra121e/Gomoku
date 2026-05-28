@@ -16,6 +16,7 @@ import {
   getCurrentSession,
   hasCredentialPassword,
 } from "@/lib/auth";
+import { getOAuthCallbackErrorMessage } from "@/lib/oauth-callback-messages";
 import { oauthProviderIds, type OAuthProviderId } from "@/lib/oauth-providers";
 import { createPageMetadata } from "@/lib/page-metadata";
 
@@ -25,6 +26,9 @@ import EditProfileForm from "./edit-form";
 type EditProfilePageProps = {
   params: Promise<{
     locale: string;
+  }>;
+  searchParams?: Promise<{
+    error?: string | string[];
   }>;
 };
 
@@ -54,15 +58,15 @@ async function loadOAuthProviders(): Promise<OAuthProviderConnection[]> {
   });
 }
 
-export default function EditProfilePage({ params }: EditProfilePageProps) {
+export default function EditProfilePage({ params, searchParams }: EditProfilePageProps) {
   return (
     <Suspense fallback={<PageLoadingShell />}>
-      <EditProfilePageContent params={params} />
+      <EditProfilePageContent params={params} searchParams={searchParams} />
     </Suspense>
   );
 }
 
-async function EditProfilePageContent({ params }: EditProfilePageProps) {
+async function EditProfilePageContent({ params, searchParams }: EditProfilePageProps) {
   const { locale } = await params;
   setRequestLocale(locale);
 
@@ -73,11 +77,17 @@ async function EditProfilePageContent({ params }: EditProfilePageProps) {
     return null;
   }
 
-  const [accountT, oauthProviders, t, hasPassword] = await Promise.all([
+  const [accountT, oauthProviders, t, hasPassword, oauthErrorMessage] = await Promise.all([
     getTranslations({ locale, namespace: "account" }),
     loadOAuthProviders(),
     getTranslations({ locale, namespace: "profile.edit" }),
     hasCredentialPassword(sessionData.user.id),
+    getOAuthCallbackErrorMessage({
+      keyPrefix: "settings.sections.connections.callbackErrors",
+      locale,
+      namespace: "account",
+      searchParams,
+    }),
   ]);
 
   return (
@@ -131,6 +141,7 @@ async function EditProfilePageContent({ params }: EditProfilePageProps) {
           >
             <OAuthAccountConnections
               callbackPath="/profile/edit"
+              initialMessage={oauthErrorMessage}
               locale={locale}
               providers={oauthProviders}
             />

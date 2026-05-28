@@ -18,6 +18,7 @@ import {
   getCurrentSession,
   serializeUserForResponse,
 } from "@/lib/auth";
+import { getOAuthCallbackErrorMessage } from "@/lib/oauth-callback-messages";
 import { oauthProviderIds, type OAuthProviderId } from "@/lib/oauth-providers";
 import { createPageMetadata } from "@/lib/page-metadata";
 
@@ -80,24 +81,35 @@ type AccountPageProps = {
   params: Promise<{
     locale: string;
   }>;
+  searchParams?: Promise<{
+    error?: string | string[];
+  }>;
 };
 
 export const generateMetadata = createPageMetadata("account");
 
-export default function AccountPage({ params }: AccountPageProps) {
+export default function AccountPage({ params, searchParams }: AccountPageProps) {
   return (
     <Suspense fallback={<PageLoadingShell />}>
-      <AccountPageContent params={params} />
+      <AccountPageContent params={params} searchParams={searchParams} />
     </Suspense>
   );
 }
 
-async function AccountPageContent({ params }: AccountPageProps) {
+async function AccountPageContent({ params, searchParams }: AccountPageProps) {
   const { locale } = await params;
   setRequestLocale(locale);
 
-  const t = await getTranslations({ locale, namespace: "account" });
-  const format = await getFormatter({ locale });
+  const [t, format, oauthErrorMessage] = await Promise.all([
+    getTranslations({ locale, namespace: "account" }),
+    getFormatter({ locale }),
+    getOAuthCallbackErrorMessage({
+      keyPrefix: "settings.sections.connections.callbackErrors",
+      locale,
+      namespace: "account",
+      searchParams,
+    }),
+  ]);
   const settingsNavItems = [
     { id: "profile", label: t("settings.sidebar.profile") },
     { id: "security", label: t("settings.sidebar.security") },
@@ -211,7 +223,11 @@ async function AccountPageContent({ params }: AccountPageProps) {
                 icon={KeyRound}
                 title={t("settings.sections.connections.title")}
               >
-                <OAuthAccountConnections locale={locale} providers={session.oauthProviders} />
+                <OAuthAccountConnections
+                  initialMessage={oauthErrorMessage}
+                  locale={locale}
+                  providers={session.oauthProviders}
+                />
               </Surface>
             </section>
 

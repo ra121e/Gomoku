@@ -13,12 +13,23 @@ test("configured OAuth providers render branded buttons on auth pages", async ({
     await gotoAppRoute(page, route);
 
     for (const provider of ["Google", "GitHub"]) {
-      const button = page.getByRole("button", { name: `Sign in with ${provider}` });
+      const button = page
+        .getByRole("button", { name: `Sign in with ${provider}` })
+        .filter({ visible: true });
 
       await expect(button).toBeVisible();
       await expect(button).toBeEnabled();
       await expectCenteredButtonContent(button);
     }
+  }
+});
+
+test("auth pages show OAuth callback errors", async ({ page }) => {
+  for (const route of ["/login", "/signup"]) {
+    await gotoAppRoute(page, `${route}?error=account_not_linked`);
+    await expect(
+      page.getByRole("alert").filter({ hasText: "OAuth sign-in was blocked", visible: true }),
+    ).toBeVisible();
   }
 });
 
@@ -30,8 +41,12 @@ test("account connections show connect, connected, and disconnect OAuth states",
   try {
     await gotoAppRoute(page, "/account");
 
-    const githubConnect = page.getByRole("button", { name: "Connect GitHub" });
-    const googleConnect = page.getByRole("button", { name: "Connect Google" });
+    const githubConnect = page
+      .getByRole("button", { name: "Connect GitHub" })
+      .filter({ visible: true });
+    const googleConnect = page
+      .getByRole("button", { name: "Connect Google" })
+      .filter({ visible: true });
 
     await expect(githubConnect).toBeEnabled();
     await expect(googleConnect).toBeEnabled();
@@ -48,18 +63,35 @@ test("account connections show connect, connected, and disconnect OAuth states",
 
     await gotoAppRoute(page, "/account");
 
-    const googleConnected = page.getByRole("button", { name: "Google connected" });
+    const googleConnected = page
+      .getByRole("button", { name: "Google connected" })
+      .filter({ visible: true });
 
     await expect(githubConnect).toBeEnabled();
     await expect(page.getByRole("button", { name: "Connect Google" })).toHaveCount(0);
     await expect(googleConnected).toBeDisabled();
     await expectCenteredButtonContent(googleConnected);
 
-    const disconnect = page.getByRole("button", { name: "Disconnect" });
+    const disconnect = page.getByRole("button", { name: "Disconnect" }).filter({ visible: true });
 
     await expect(disconnect).toHaveCount(1);
     await expect(disconnect).toBeEnabled();
     await expectNoDocumentOverflow(page, "/account");
+  } finally {
+    await cleanupTestUsers([user.username]);
+  }
+});
+
+test("account pages show OAuth callback errors", async ({ page }, testInfo) => {
+  const user = await createAndSignInTestUser(page, testInfo);
+
+  try {
+    for (const route of ["/account", "/profile/edit"]) {
+      await gotoAppRoute(page, `${route}?error=email_doesn%27t_match`);
+      await expect(
+        page.getByRole("alert").filter({ hasText: "provider email does not match", visible: true }),
+      ).toBeVisible();
+    }
   } finally {
     await cleanupTestUsers([user.username]);
   }
